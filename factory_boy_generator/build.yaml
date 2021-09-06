@@ -1,0 +1,19 @@
+targets:
+  $default:
+    builders:
+      factory:
+        enabled: true
+        generate_for:
+          exclude:
+            - example
+          include:
+            - test/integration/*
+            - test/integration/**/*
+
+builders:
+  factory:
+    import: "package:factory_boy_generator/factory_boy.dart"
+    builder_factories: ["factory"]
+    build_extensions: { ".dart": [".factory.dart"] }
+    auto_apply: dependents
+    build_to: source
