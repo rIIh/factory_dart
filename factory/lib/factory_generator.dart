@@ -1,13 +1,72 @@
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:build/src/builder/build_step.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:code_builder/code_builder.dart';
+import 'package:collection/collection.dart';
 import 'package:dart_style/dart_style.dart';
+import 'package:factory_annotation/factory_annotation.dart';
 import 'package:source_gen/source_gen.dart';
+
+String? _convertDartObjectToCode(DartObject object) {
+  final values = [
+    object.toBoolValue(),
+    object.toIntValue(),
+    object.toDoubleValue(),
+    object.toFunctionValue(),
+    object.toListValue(),
+    object.toSetValue(),
+    object.toMapValue(),
+    object.toStringValue(),
+    object.toSymbolValue(),
+    object.toTypeValue(),
+  ];
+  return values.firstWhereOrNull((element) => element != null)?.toString();
+}
 
 class FactoryGenerator extends GeneratorForAnnotation<Factory> {
   static final _dartfmt = DartFormatter();
   static const _constructorChecker =
       TypeChecker.fromRuntime(FactoryConstructor);
+
+  String? getDefaultValueCode(
+    ConstructorElement constructor,
+    ParameterElement parameter,
+  ) {
+    final computedValue = parameter.computeConstantValue();
+    if (parameter.hasDefaultValue) {
+      return parameter.defaultValueCode;
+    }
+
+    if (constructor.redirectedConstructor != null) {
+      final redirectedParameter = constructor.redirectedConstructor!.parameters
+          .firstWhereOrNull((element) => element.name == parameter.name);
+
+      if (redirectedParameter != null) {
+        return getDefaultValueCode(
+          constructor.redirectedConstructor!,
+          redirectedParameter,
+        );
+      }
+    }
+    if (computedValue != null && computedValue.hasKnownValue) {
+      return _convertDartObjectToCode(computedValue);
+    }
+  }
+
+  bool checkOptionalRecursive(
+      ConstructorElement constructor, ParameterElement parameter) {
+    if (parameter.isNotOptional) {
+      return false;
+    }
+    if (constructor.redirectedConstructor != null) {
+      final redirectedConstructor = constructor.redirectedConstructor!;
+      final redirectedParameter = redirectedConstructor.parameters.firstWhere(
+        (element) => element.name == parameter.name,
+      );
+      return checkOptionalRecursive(redirectedConstructor, redirectedParameter);
+    }
+    return parameter.isOptional;
+  }
 
   @override
   Stream<String> generateForAnnotatedElement(
@@ -31,12 +90,22 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
             return _constructorChecker.hasAnnotationOf(element);
           }
           return !element.isSynthetic &&
-              element.isAccessibleIn(
-                factoryElement.library,
-              );
+              !element.isPrivate &&
+              element.isAccessibleIn(factoryElement.library);
         },
       );
-      final targetFields = targetConstructor.parameters;
+      final targetParameters = targetConstructor.parameters;
+      final defaultValues = Map.fromEntries(
+        targetParameters.map(
+          (targetParameter) => MapEntry(
+            targetParameter.name,
+            getDefaultValueCode(targetConstructor, targetParameter),
+          ),
+        ),
+      );
+
+      bool checkDefaultValue(ParameterElement element) =>
+          defaultValues[element.name] != null;
 
       final factoryImplementation = Class((it) {
         it.name = '_\$${factoryElement.name}';
@@ -70,7 +139,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
             Parameter(
               (it) => it
                 ..name = 'key'
-                ..defaultTo = Code('const ContextKey()')
+                ..defaultTo = Code('defaultKey')
                 ..toThis = true,
             ),
           ]);
@@ -80,10 +149,10 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
           ]);
         }));
 
-        it.methods.addAll(targetFields.map((e) {
+        it.methods.addAll(targetParameters.map((targetParameter) {
           return Method((it) {
-            it.name = 'get${e.name.capitalize()}';
-            it.returns = Reference('${e.type}');
+            it.name = 'get${targetParameter.name.capitalize()}';
+            it.returns = Reference('${targetParameter.type}');
             it.requiredParameters.addAll([
               Parameter((it) {
                 it.type = Reference('FactoryContext');
@@ -95,15 +164,22 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
               })
             ]);
 
-            if (e.isOptional && !e.hasDefaultValue) {
+            final targetParameterDefaultValue =
+                defaultValues[targetParameter.name];
+
+            if (targetParameterDefaultValue?.isNotEmpty == true) {
+              it.body = Code('return $targetParameterDefaultValue;');
+            } else if (targetParameter.isOptional &&
+                !targetParameter.hasDefaultValue &&
+                targetConstructor.redirectedConstructor == null) {
               it.body = Code('return null;');
-            } else if (e.hasDefaultValue) {
-              it.body = Code('return ${e.defaultValueCode};');
+            } else if (targetParameter.hasDefaultValue) {
+              it.body = Code('return ${targetParameter.defaultValueCode};');
             }
           });
         }));
 
-        final valueBuilders = targetFields.map(
+        final valueBuilders = targetParameters.map(
           (e) => Parameter((it) {
             it.name = e.name;
             it.named = true;
@@ -116,20 +192,22 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
           it.returns = Reference('${targetElement.thisType}');
           it.optionalParameters.addAll(valueBuilders);
 
-          final fieldsSetters = targetFields.map(
-            (e) => 'builder.${e.name} = '
+          final fieldsSetters = targetParameters.map(
+            (e) => '_\$objectBuilder.${e.name} = '
                 '(${e.name} ?? get${e.name.capitalize()})(context, key + \'${e.name}\');',
           );
 
           it.body = Code('''
-            final builder = _${targetElement.thisType}Builder();
-            context.add(builder.toReadOnly(), key);
+            final _\$objectBuilder = _${targetElement.thisType}Builder();
+            this.context.add(_\$objectBuilder.toReadOnly(), this.key);
 
             ${fieldsSetters.join('\n')}
 
-            final object = builder.build();
-            context.clear();
-            return object;
+            {
+              final object = _\$objectBuilder.build();
+              this.context.clear();
+              return object;
+            }
           ''');
         }));
 
@@ -146,7 +224,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
           return List.generate(
             length,
             (index) => create(
-              ${targetFields.map((e) => '${e.name}: ${e.name}').join(',\n')}
+              ${targetParameters.map((e) => '${e.name}: ${e.name}').join(',\n')}
             ),
           );
           ''');
@@ -160,14 +238,19 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         );
 
         it.fields.addAll(
-          targetFields.map(
+          targetParameters.map(
             (e) => Field(
-              (it) => it
-                ..type = Reference(
-                  'ValueGetter<${e.type}${e.isOptional ? '' : '?'}>',
-                )
-                ..name = 'get${e.name.capitalize()}'
-                ..modifier = FieldModifier.final$,
+              (it) {
+                final hasDefaultValue = checkDefaultValue(e);
+                final shouldBeNullable =
+                    !hasDefaultValue && !e.type.toString().endsWith('?');
+                it
+                  ..type = Reference(
+                    'ValueGetter<${e.type}${shouldBeNullable ? '?' : ''}>',
+                  )
+                  ..name = 'get${e.name.capitalize()}'
+                  ..modifier = FieldModifier.final$;
+              },
             ),
           ),
         );
@@ -175,7 +258,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         it.constructors.add(Constructor((it) {
           it.constant = true;
           it.requiredParameters.addAll(
-            targetFields.map(
+            targetParameters.map(
               (e) => Parameter(
                 (it) => it
                   ..name = 'get${e.name.capitalize()}'
@@ -191,13 +274,29 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         it.extend = Reference('ObjectBuilder<${targetElement.thisType}>');
 
         it.fields.addAll(
-          targetFields.map(
-            (e) => Field(
-              (it) => it
-                ..name = e.name
-                ..type = Reference('${e.type}${e.isOptional ? '' : '?'}')
-                ..assignment =
-                    e.hasDefaultValue ? Code(e.defaultValueCode!) : null,
+          targetParameters.map(
+            (targetParameter) => Field(
+              (it) {
+                final hasDefaultValue =
+                    defaultValues[targetParameter.name] != null;
+
+                final shouldBeNullable = !hasDefaultValue &&
+                    !targetParameter.type.toString().endsWith('?');
+
+                it
+                  ..name = targetParameter.name
+                  ..type = Reference(
+                      '${targetParameter.type}${shouldBeNullable ? '?' : ''}');
+
+                final parameterDefaultAssignment =
+                    defaultValues[targetParameter.name];
+
+                if (parameterDefaultAssignment?.isNotEmpty == true) {
+                  it.assignment = Code(parameterDefaultAssignment!);
+                } else if (targetParameter.hasDefaultValue) {
+                  it.assignment = Code(targetParameter.defaultValueCode!);
+                }
+              },
             ),
           ),
         );
@@ -211,7 +310,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
 
               it.body = Code('''
               return ${readonlyBulder.name}(
-                ${targetFields.map((e) => '() => ${e.name}').join(',\n')}
+                ${targetParameters.map((e) => '() => ${e.name}').join(',\n')}
               );
               ''');
             },
@@ -221,7 +320,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         it.methods.add(
           Method(
             (it) {
-              final parameters = targetFields.map((e) {
+              final parameters = targetParameters.map((e) {
                 if (e.isNamed) {
                   return '${e.name}: ${e.name}';
                 }
@@ -236,7 +335,11 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
                 ..returns = Reference('${targetElement.thisType}')
                 ..body = Code('''
             try {
-              ${targetFields.map((e) => 'final ${e.name} = this.${e.name}${e.isNotOptional ? '!' : ''};').join('\n')}
+              ${targetParameters.map((e) {
+                  final isOptional =
+                      checkOptionalRecursive(targetConstructor, e);
+                  return 'final ${e.name} = this.${e.name}${!isOptional ? '!' : ''};';
+                }).join('\n')}
 
               return $constructor(
                 ${parameters.join(',\n')}
@@ -260,7 +363,6 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         ),
       );
       final code = '${library.accept(DartEmitter.scoped())}';
-      print(code);
       yield _dartfmt.format(code);
     }
   }
