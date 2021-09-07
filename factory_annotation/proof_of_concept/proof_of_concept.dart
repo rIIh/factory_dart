@@ -5,7 +5,7 @@ import 'models.dart';
 
 @Factory(Item)
 class ItemFactory extends _$ItemFactory {
-  ItemFactory([FactoryContext? context, ContextKey key = const ContextKey()])
+  ItemFactory([FactoryContext? context, ContextKey key = defaultKey])
       : super(context, key);
 
   @override
@@ -23,7 +23,7 @@ class ItemFactory extends _$ItemFactory {
 
 @Factory(SubItem)
 class SubItemFactory extends _$SubItemFactory {
-  SubItemFactory([FactoryContext? context, ContextKey key = const ContextKey()])
+  SubItemFactory([FactoryContext? context, ContextKey key = defaultKey])
       : super(context, key);
 
   @override
@@ -40,7 +40,7 @@ abstract class _$ItemFactory {
 
   _$ItemFactory([
     FactoryContext? context,
-    this.key = const ContextKey(),
+    this.key = defaultKey,
   ])  : isRoot = context == null,
         context = context ?? FactoryContext();
 
@@ -126,7 +126,7 @@ abstract class _$SubItemFactory {
 
   _$SubItemFactory([
     FactoryContext? context,
-    this.key = const ContextKey(),
+    this.key = defaultKey,
   ])  : isRoot = context == null,
         context = context ?? FactoryContext();
 

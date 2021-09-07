@@ -27,7 +27,7 @@ class SubItem {
 
 @Factory(Item)
 class ItemFactory extends _$ItemFactory {
-  ItemFactory([FactoryContext? context, ContextKey key = const ContextKey()])
+  ItemFactory([FactoryContext? context, ContextKey key = defaultKey])
       : super(context, key);
 
   @override
@@ -45,7 +45,7 @@ class ItemFactory extends _$ItemFactory {
 
 @Factory(SubItem)
 class SubItemFactory extends _$SubItemFactory {
-  SubItemFactory([FactoryContext? context, ContextKey key = const ContextKey()])
+  SubItemFactory([FactoryContext? context, ContextKey key = defaultKey])
       : super(context, key);
 
   @override

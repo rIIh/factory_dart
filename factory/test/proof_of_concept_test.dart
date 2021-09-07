@@ -1,3 +1,4 @@
+import 'package:factory_annotation/factory_annotation.dart';
 import 'package:test/test.dart';
 
 import 'integration/proof_of_concept.dart';

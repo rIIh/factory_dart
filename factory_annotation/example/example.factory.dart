@@ -9,7 +9,7 @@ part of 'example.dart';
 // **************************************************************************
 
 abstract class _$ItemFactory {
-  _$ItemFactory([FactoryContext? context, this.key = const ContextKey()])
+  _$ItemFactory([FactoryContext? context, this.key = defaultKey])
       : isRoot = context == null,
         context = context ?? FactoryContext();
 
@@ -102,7 +102,7 @@ class _ItemBuilder extends ObjectBuilder<Item> {
 }
 
 abstract class _$SubItemFactory {
-  _$SubItemFactory([FactoryContext? context, this.key = const ContextKey()])
+  _$SubItemFactory([FactoryContext? context, this.key = defaultKey])
       : isRoot = context == null,
         context = context ?? FactoryContext();
 
