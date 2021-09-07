@@ -1,5 +1,4 @@
 import 'package:factory_boy/factory_boy.dart';
-import 'package:factory_boy/factory_declaration.dart';
 import 'package:faker/faker.dart';
 
 part 'proof_of_concept.factory.dart';
