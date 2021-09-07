@@ -39,6 +39,8 @@ class ContextKey {
   int get hashCode => path.hashCode;
 }
 
+const defaultKey = ContextKey();
+
 class FactoryContext {
   final Map<ContextKey, ObjectReadonlyBuilder> _builders = {};
 
