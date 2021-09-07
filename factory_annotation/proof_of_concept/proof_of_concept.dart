@@ -1,4 +1,4 @@
-import 'package:factory_boy/factory_boy.dart';
+import 'package:factory_annotation/factory_annotation.dart';
 import 'package:faker/faker.dart';
 
 import 'models.dart';

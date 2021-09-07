@@ -1,8 +1,8 @@
-name: factory_boy
-description: Implementation details of factory_boy package. Use it to declare factories for your project.
+name: factory_annotation
+description: Implementation details of factory package. Use it to declare factories for your project.
 version: 1.0.0
 publish_to: none
-homepage: https://github.com/rIIh/factory_boy_dart.git
+homepage: https://github.com/rIIh/factory_dart.git
 environment:
   sdk: ">=2.12.0 <3.0.0"
 

@@ -1,7 +1,7 @@
-import 'package:factory_boy/factory_boy.dart';
+import 'package:factory_annotation/factory_annotation.dart';
 import 'package:faker/faker.dart';
 
-part 'proof_of_concept.factory.dart';
+part 'example.factory.dart';
 
 class Item {
   final String name;

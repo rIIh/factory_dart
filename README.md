@@ -1,1 +1,1 @@
-factory_boy
+factory

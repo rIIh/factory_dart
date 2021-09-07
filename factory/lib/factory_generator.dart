@@ -1,10 +1,7 @@
-import 'package:analyzer/dart/element/type.dart';
 import 'package:build/src/builder/build_step.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_style/dart_style.dart';
-import 'package:factory_boy/factory_declaration.dart';
-import 'package:factory_boy_generator/parse_generator.dart';
 import 'package:source_gen/source_gen.dart';
 
 class FactoryGenerator extends GeneratorForAnnotation<Factory> {
@@ -263,6 +260,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         ),
       );
       final code = '${library.accept(DartEmitter.scoped())}';
+      print(code);
       yield _dartfmt.format(code);
     }
   }

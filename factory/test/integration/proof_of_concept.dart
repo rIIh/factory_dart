@@ -1,7 +1,6 @@
-import 'package:factory_boy/factory_boy.dart';
 import 'package:faker/faker.dart';
 
-part "example.factory.dart";
+part '../poc/proof_of_concept.factory.dart';
 
 class Item {
   final String name;

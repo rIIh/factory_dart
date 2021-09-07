@@ -1,7 +1,6 @@
-import 'package:factory_boy/factory_boy.dart';
 import 'package:test/test.dart';
 
-import 'proof_of_concept.dart';
+import 'integration/proof_of_concept.dart';
 
 void main() {
   test('can create object', () {

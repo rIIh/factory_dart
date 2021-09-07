@@ -12,7 +12,7 @@ targets:
 
 builders:
   factory:
-    import: "package:factory_boy_generator/factory_boy.dart"
+    import: "package:factory/factory_builder.dart"
     builder_factories: ["factory"]
     build_extensions: { ".dart": [".factory.dart"] }
     auto_apply: dependents
