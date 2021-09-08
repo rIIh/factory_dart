@@ -41,6 +41,11 @@ class ItemFactory extends _$ItemFactory {
   @override
   SubItem getSubItem(FactoryContext context, ContextKey key) =>
       SubItemFactory(context, key).create();
+
+  @override
+  bool getFlag(FactoryContext context, ContextKey key) {
+    return false;
+  }
 }
 
 @Factory(SubItem)
