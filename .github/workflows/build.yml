@@ -1,0 +1,62 @@
+name: build, analyze, test
+
+on:
+  push:
+  pull_request:
+  schedule:
+    # runs the CI everyday at 10AM
+    - cron: "0 10 * * *"
+
+jobs:
+  freezed:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        package:
+          - factory
+          - factory_annotation
+        channel:
+          - stable
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dart-lang/setup-dart@v1
+
+      # It is executed separatly
+      - name: Removing example folder
+        run: rm -rf example
+        working-directory: ${{ matrix.package }}
+
+      - name: Override dependencies
+        run: ./scripts/setup_dependencies.sh
+
+      - name: Install dependencies
+        run: dart pub get
+        working-directory: ${{ matrix.package }}
+
+      - name: Check format
+        run: dart format --set-exit-if-changed .
+        working-directory: ${{ matrix.package }}
+
+      - name: Generate
+        run: |
+          if grep -q build_runner "pubspec.yaml"; then
+            dart run build_runner build --delete-conflicting-outputs
+          fi
+        working-directory: ${{ matrix.package }}
+
+      - name: Analyze
+        run: dart analyze
+        working-directory: ${{ matrix.package }}
+
+      - name: Run tests
+        run: |
+          if grep -q "name: factory_annotation" "pubspec.yaml"; then
+           echo "skip"
+          elif grep -q "name: factory" "pubspec.yaml"; then
+            dart pub get && dart test
+          else
+            dart test
+          fi
+        working-directory: ${{ matrix.package }}
