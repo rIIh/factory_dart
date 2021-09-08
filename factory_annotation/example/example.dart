@@ -1,4 +1,5 @@
 import 'package:factory_annotation/factory_annotation.dart';
+import 'package:factory_annotation/src/value_provider.dart';
 import 'package:faker/faker.dart';
 
 part 'example.factory.dart';
@@ -29,6 +30,9 @@ class SubItem {
 class ItemFactory extends _$ItemFactory {
   ItemFactory([FactoryContext? context, ContextKey key = defaultKey])
       : super(context, key);
+
+  @override
+  late ValueProvider? valueProvider = FakerProvider();
 
   @override
   String getName(FactoryContext context, ContextKey key) =>

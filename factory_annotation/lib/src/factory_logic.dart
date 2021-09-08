@@ -1,3 +1,4 @@
+import 'package:factory_annotation/src/value_provider.dart';
 import 'package:meta/meta.dart';
 
 typedef ValueGetter<T> = T Function();
@@ -17,6 +18,8 @@ abstract class ObjectBuilder<T> extends ObjectReadonlyBuilder {
 }
 
 abstract class ObjectFactory<TModel> {
+  late ValueProvider? valueProvider;
+
   /// Create [TModel] instance
   TModel create();
 

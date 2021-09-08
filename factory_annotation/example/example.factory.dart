@@ -8,7 +8,7 @@ part of 'example.dart';
 // FactoryGenerator
 // **************************************************************************
 
-abstract class _$ItemFactory {
+abstract class _$ItemFactory extends ObjectFactory<Item> {
   _$ItemFactory([FactoryContext? context, this.key = defaultKey])
       : isRoot = context == null,
         context = context ?? FactoryContext();
