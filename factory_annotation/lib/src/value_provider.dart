@@ -4,14 +4,14 @@ abstract class ValueProvider {
   const ValueProvider();
 
   int getInt();
+
   double getDouble();
+
   String getString();
+
   bool getBool();
 
   T getEnumValue<T>(List<T> values);
-
-  bool canHandleType<TType>();
-  bool canHandleEnum();
 }
 
 class FakerProvider extends ValueProvider {

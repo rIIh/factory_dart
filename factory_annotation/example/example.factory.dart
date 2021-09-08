@@ -19,7 +19,14 @@ abstract class _$ItemFactory extends ObjectFactory<Item> {
 
   final ContextKey key;
 
-  String getName(FactoryContext context, ContextKey key);
+  String getName(FactoryContext context, ContextKey key) {
+    try {
+      return valueProvider!.getString();
+    } catch (exception) {
+      throw MissingValueProviderException();
+    }
+  }
+
   int getQuantity(FactoryContext context, ContextKey key);
   bool getFlag(FactoryContext context, ContextKey key) {
     return false;
