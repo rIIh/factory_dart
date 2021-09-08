@@ -1,4 +1,3 @@
-import 'package:analyzer/dart/constant/value.dart';
 import 'package:build/src/builder/build_step.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:code_builder/code_builder.dart';
@@ -7,63 +6,76 @@ import 'package:dart_style/dart_style.dart';
 import 'package:factory_annotation/factory_annotation.dart';
 import 'package:source_gen/source_gen.dart';
 
-String? _convertDartObjectToCode(DartObject object) {
-  final values = [
-    object.toBoolValue(),
-    object.toIntValue(),
-    object.toDoubleValue(),
-    object.toFunctionValue(),
-    object.toListValue(),
-    object.toSetValue(),
-    object.toMapValue(),
-    object.toStringValue(),
-    object.toSymbolValue(),
-    object.toTypeValue(),
-  ];
-  return values.firstWhereOrNull((element) => element != null)?.toString();
-}
+import 'utils.dart';
 
 class FactoryGenerator extends GeneratorForAnnotation<Factory> {
   static final _dartfmt = DartFormatter();
   static const _constructorChecker =
       TypeChecker.fromRuntime(FactoryConstructor);
 
+  const FactoryGenerator();
+
   String? getDefaultValueCode(
-    ConstructorElement constructor,
     ParameterElement parameter,
   ) {
-    final computedValue = parameter.computeConstantValue();
+    final constructor = parameter.enclosingElement as ConstructorElement;
     if (parameter.hasDefaultValue) {
       return parameter.defaultValueCode;
     }
-
     if (constructor.redirectedConstructor != null) {
       final redirectedParameter = constructor.redirectedConstructor!.parameters
           .firstWhereOrNull((element) => element.name == parameter.name);
 
       if (redirectedParameter != null) {
-        return getDefaultValueCode(
-          constructor.redirectedConstructor!,
-          redirectedParameter,
-        );
+        return getDefaultValueCode(redirectedParameter);
       }
-    }
-    if (computedValue != null && computedValue.hasKnownValue) {
-      return _convertDartObjectToCode(computedValue);
     }
   }
 
-  bool checkOptionalRecursive(
-      ConstructorElement constructor, ParameterElement parameter) {
-    if (parameter.isNotOptional) {
-      return false;
+  Future<String?> getDocumentation(
+      ParameterElement parameter, BuildStep buildStep) async {
+    if (parameter.documentationComment?.isNotEmpty == true) {
+      return parameter.documentationComment;
     }
+
+    final parameterDocumentation = await documentationOfParameter(
+      parameter,
+      buildStep,
+    );
+    if (parameterDocumentation.isNotEmpty == true) {
+      return parameterDocumentation;
+    }
+
+    if (parameter.isInitializingFormal) {
+      final classElement =
+          parameter.enclosingElement!.enclosingElement as ClassElement;
+
+      final field = classElement.fields
+          .firstWhereOrNull((element) => element.name == parameter.name);
+
+      if (field?.documentationComment != null) {
+        return field!.documentationComment;
+      }
+    }
+  }
+
+  bool checkOptionalRecursive(ParameterElement parameter) {
+    final constructor = parameter.enclosingElement as ConstructorElement;
     if (constructor.redirectedConstructor != null) {
       final redirectedConstructor = constructor.redirectedConstructor!;
       final redirectedParameter = redirectedConstructor.parameters.firstWhere(
         (element) => element.name == parameter.name,
       );
-      return checkOptionalRecursive(redirectedConstructor, redirectedParameter);
+      return checkOptionalRecursive(redirectedParameter);
+    }
+    // TODO: remove when `analyzer: 2.0.0` dependency used.
+    // Because of occasionaly missing defaultValueCode for parameter
+    // we can't use `parameter.isOptional` to determine optionality.
+    // Analyzer marks parameter optional regardless of missing defaultValueCode.
+    // Therefore parameter can't be optional if we not have default value for it
+    // or it not nullable.
+    if (parameter.isOptional && !parameter.type.toString().endsWith('?')) {
+      return getDefaultValueCode(parameter)?.isNotEmpty == true;
     }
     return parameter.isOptional;
   }
@@ -95,11 +107,21 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         },
       );
       final targetParameters = targetConstructor.parameters;
+      final parametersDocumentation = Map.fromEntries(
+        await Future.wait(
+          targetParameters.map(
+            (e) async => MapEntry(
+              e.name,
+              await getDocumentation(e, buildStep),
+            ),
+          ),
+        ),
+      );
       final defaultValues = Map.fromEntries(
         targetParameters.map(
           (targetParameter) => MapEntry(
             targetParameter.name,
-            getDefaultValueCode(targetConstructor, targetParameter),
+            getDefaultValueCode(targetParameter),
           ),
         ),
       );
@@ -109,6 +131,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
 
       final factoryImplementation = Class((it) {
         it.name = '_\$${factoryElement.name}';
+        it.extend = Reference('ObjectFactory<${targetElement.thisType}>');
         it.abstract = true;
         it.fields.addAll([
           Field(
@@ -151,6 +174,10 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
 
         it.methods.addAll(targetParameters.map((targetParameter) {
           return Method((it) {
+            final docs = parametersDocumentation[targetParameter.name];
+            if (docs?.isNotEmpty == true) {
+              it.docs.add(docs!);
+            }
             it.name = 'get${targetParameter.name.capitalize()}';
             it.returns = Reference('${targetParameter.type}');
             it.requiredParameters.addAll([
@@ -164,17 +191,16 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
               })
             ]);
 
-            final targetParameterDefaultValue =
-                defaultValues[targetParameter.name];
+            final hasDefaultValueCode =
+                defaultValues[targetParameter.name] != null;
+            final isOptional = checkOptionalRecursive(targetParameter);
 
-            if (targetParameterDefaultValue?.isNotEmpty == true) {
-              it.body = Code('return $targetParameterDefaultValue;');
-            } else if (targetParameter.isOptional &&
-                !targetParameter.hasDefaultValue &&
-                targetConstructor.redirectedConstructor == null) {
-              it.body = Code('return null;');
+            if (hasDefaultValueCode) {
+              it.body = Code('return ${defaultValues[targetParameter.name]};');
             } else if (targetParameter.hasDefaultValue) {
               it.body = Code('return ${targetParameter.defaultValueCode};');
+            } else if (isOptional) {
+              it.body = Code('return null;');
             }
           });
         }));
@@ -335,10 +361,9 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
                 ..returns = Reference('${targetElement.thisType}')
                 ..body = Code('''
             try {
-              ${targetParameters.map((e) {
-                  final isOptional =
-                      checkOptionalRecursive(targetConstructor, e);
-                  return 'final ${e.name} = this.${e.name}${!isOptional ? '!' : ''};';
+              ${targetParameters.map((targetParameter) {
+                  final isOptional = checkOptionalRecursive(targetParameter);
+                  return 'final ${targetParameter.name} = this.${targetParameter.name}${!isOptional ? '!' : ''};';
                 }).join('\n')}
 
               return $constructor(
