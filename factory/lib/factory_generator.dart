@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:analyzer/dart/element/type.dart';
 import 'package:build/src/builder/build_step.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:code_builder/code_builder.dart';
@@ -7,6 +10,12 @@ import 'package:factory_annotation/factory_annotation.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'utils.dart';
+
+void logWarning(String message) => print(getDelimetedSection(
+      message,
+      32,
+      title: 'Factory Generator',
+    ));
 
 class FactoryGenerator extends GeneratorForAnnotation<Factory> {
   static final _dartfmt = DartFormatter();
@@ -80,6 +89,63 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
     return parameter.isOptional;
   }
 
+  String? getProviderCallCode(DartType type,
+      {String contextGetter = 'context', String keyGetter = 'key'}) {
+    final provider = 'valueProvider!.';
+    String? method;
+    if (type.isDartCoreInt) {
+      method = 'getInt($contextGetter, $keyGetter)';
+    } else if (type.isDartCoreDouble) {
+      method = 'getDouble($contextGetter, $keyGetter)';
+    } else if (type.isDartCoreString) {
+      method = 'getString($contextGetter, $keyGetter)';
+    } else if (type.isDartCoreBool) {
+      method = 'getBool($contextGetter, $keyGetter)';
+    }
+    if (isEnum(type)) {
+      method =
+          'getEnumValue(${type.getDisplayString(withNullability: false)}.values, $contextGetter, $keyGetter)';
+    }
+    if (method != null) {
+      return '''
+      try {
+        return ${provider + method};
+      } catch (exception) {
+        throw MissingValueProviderException();
+      }
+      ''';
+    }
+  }
+
+  bool checkValueProviderAssigned(ClassElement factoryElement) {
+    final fieldElement = factoryElement.fields.firstWhereOrNull(
+      (element) => element.name == 'valueProvider',
+    );
+    if (fieldElement != null) {
+      if (fieldElement.hasInitializer) {
+        return true;
+      }
+      if (fieldElement.getter != null && !factoryElement.isAbstract) {
+        logWarning(
+          'You define `valueProvider` field as a getter in '
+          '${factoryElement.thisType.getDisplayString(withNullability: false)}. '
+          'That type of operation is not supported.\n'
+          '\n'
+          'Prefer to use "late ValueProvider? valueProvider = {value}" syntax.\n'
+          'Or use mixin with "late ValueProvider? valueProvider = {value}" implementation.\n'
+          '\n'
+          'Example - `class Factory extends _\$Factory with FakerProviderMixin`',
+        );
+      }
+    }
+    if (factoryElement.mixins.isNotEmpty) {
+      return factoryElement.mixins.any(
+        (element) => checkValueProviderAssigned(element.element),
+      );
+    }
+    return false;
+  }
+
   @override
   Stream<String> generateForAnnotatedElement(
     Element factoryElement,
@@ -117,6 +183,17 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
           ),
         ),
       );
+      final hasValueProvider = checkValueProviderAssigned(factoryElement);
+      for (final targetParameter in targetParameters) {
+        final element = targetParameter.type.element;
+        if (element?.isAccessibleIn(factoryElement.library) != true) {
+          logWarning(
+            '${targetParameter.type.getDisplayString(withNullability: false)} needed by ${targetConstructor.displayName}\n'
+            'but not accessible in ${factoryElement.library.displayName} file.',
+          );
+        }
+      }
+
       final defaultValues = Map.fromEntries(
         targetParameters.map(
           (targetParameter) => MapEntry(
@@ -194,11 +271,15 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
             final hasDefaultValueCode =
                 defaultValues[targetParameter.name] != null;
             final isOptional = checkOptionalRecursive(targetParameter);
+            final providerAssignment =
+                getProviderCallCode(targetParameter.type);
 
             if (hasDefaultValueCode) {
               it.body = Code('return ${defaultValues[targetParameter.name]};');
             } else if (targetParameter.hasDefaultValue) {
               it.body = Code('return ${targetParameter.defaultValueCode};');
+            } else if (hasValueProvider && providerAssignment != null) {
+              it.body = Code(providerAssignment);
             } else if (isOptional) {
               it.body = Code('return null;');
             }
