@@ -22,19 +22,15 @@ void main() {
     expect(object.title, equals(RedirectedItemFactory.kTitle));
   });
 
-  test(
-    'handles default values in redirected constructor',
-    () {
-      final factory = RedirectedItemFactory();
-      final object = factory.create(
-        object: fromValue(
-          const SomeConstantObject('hello world'),
-        ),
-      );
+  test('handles default values in redirected constructor', () {
+    final factory = RedirectedItemFactory();
+    final object = factory.create(
+      object: fromValue(
+        const SomeConstantObject('hello world'),
+      ),
+    );
 
-      expect(object.object, equals(ItemDeclaration.kConstantObjectDefault));
-      expect(object.isPrimary, equals(ItemDeclaration.kIsPrimaryDefault));
-    },
-    skip: 'test is flaky while `analyzer` is below 2.0.0 version.',
-  );
+    expect(object.object, equals(ItemDeclaration.kConstantObjectDefault));
+    expect(object.isPrimary, equals(ItemDeclaration.kIsPrimaryDefault));
+  });
 }
