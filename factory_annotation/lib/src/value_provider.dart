@@ -1,17 +1,18 @@
+import 'package:factory_annotation/factory_annotation.dart';
 import 'package:faker/faker.dart';
 
 abstract class ValueProvider {
   const ValueProvider();
 
-  int getInt();
+  int getInt(FactoryContext context, ContextKey key);
 
-  double getDouble();
+  double getDouble(FactoryContext context, ContextKey key);
 
-  String getString();
+  String getString(FactoryContext context, ContextKey key);
 
-  bool getBool();
+  bool getBool(FactoryContext context, ContextKey key);
 
-  T getEnumValue<T>(List<T> values);
+  T getEnumValue<T>(List<T> values, FactoryContext context, ContextKey key);
 }
 
 class FakerProvider extends ValueProvider {
@@ -20,21 +21,22 @@ class FakerProvider extends ValueProvider {
   FakerProvider([Faker? faker]) : _faker = faker ?? Faker();
 
   @override
-  bool getBool() => _faker.randomGenerator.boolean();
+  bool getBool(FactoryContext context, ContextKey key) =>
+      _faker.randomGenerator.boolean();
 
   @override
-  double getDouble() => _faker.randomGenerator.decimal();
+  double getDouble(FactoryContext context, ContextKey key) =>
+      _faker.randomGenerator.decimal();
 
   @override
-  T getEnumValue<T>(List<T> values) => _faker.randomGenerator.element(values);
+  int getInt(FactoryContext context, ContextKey key) =>
+      _faker.randomGenerator.integer(1000);
 
   @override
-  int getInt() => _faker.randomGenerator.integer(1000);
+  String getString(FactoryContext context, ContextKey key) =>
+      _faker.lorem.sentence();
 
   @override
-  String getString() => _faker.lorem.sentence();
-
-  bool canHandleType<TType>() => [bool, String, double, int].contains(TType);
-
-  bool canHandleEnum() => true;
+  T getEnumValue<T>(List<T> values, FactoryContext context, ContextKey key) =>
+      _faker.randomGenerator.element(values);
 }

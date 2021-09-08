@@ -21,7 +21,7 @@ abstract class _$ItemFactory extends ObjectFactory<Item> {
 
   String getName(FactoryContext context, ContextKey key) {
     try {
-      return valueProvider!.getString();
+      return valueProvider!.getString(context, key);
     } catch (exception) {
       throw MissingValueProviderException();
     }
