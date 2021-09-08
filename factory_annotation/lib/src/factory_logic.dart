@@ -16,6 +16,14 @@ abstract class ObjectBuilder<T> extends ObjectReadonlyBuilder {
   T build();
 }
 
+abstract class ObjectFactory<TModel> {
+  /// Create [TModel] instance
+  TModel create();
+
+  /// Create list of [TModel] instances with [length]
+  List<TModel> batch(int length) => List.generate(length, (index) => create());
+}
+
 @immutable
 class ContextKey {
   final String path;
