@@ -2,8 +2,13 @@ import 'package:factory_annotation/factory_annotation.dart';
 import 'package:test/test.dart';
 
 import 'integration/proof_of_concept.dart';
+import 'test_helpers/test_generated_output.dart';
 
 void main() {
+  const target = 'proof_of_concept';
+
+  testOutput(target);
+
   test('can create object', () {
     final factory = ItemFactory();
     final object = factory.create();

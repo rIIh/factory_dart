@@ -17,6 +17,16 @@ class RedirectedItemFactory extends _$RedirectedItemFactory {
 
   @override
   String getTitle(FactoryContext context, ContextKey key) => kTitle;
+
+  @override
+  bool getIsPrimary(FactoryContext context, ContextKey key) {
+    return false;
+  }
+
+  @override
+  SomeConstantObject getObject(FactoryContext context, ContextKey key) {
+    return SomeConstantObject('none');
+  }
 }
 
 class SomeConstantObject {
@@ -41,6 +51,7 @@ class ItemDeclaration with _Interface {
     required String title,
     bool isPrimary,
     SomeConstantObject object,
+    String? nullableWithDefaultValue,
   }) = PrivateItemInterface;
 }
 
@@ -49,6 +60,8 @@ mixin _Interface {
   String get title => throw StateError('Private constructor used');
   bool get isPrimary => throw StateError('Private constructor used');
   SomeConstantObject get object => throw StateError('Private constructor used');
+  String? get nullableWithDefaultValue =>
+      throw StateError('Private constructor used');
 }
 
 abstract class PrivateItemInterface extends ItemDeclaration {
@@ -57,6 +70,7 @@ abstract class PrivateItemInterface extends ItemDeclaration {
     required String title,
     bool isPrimary,
     SomeConstantObject object,
+    String? nullableWithDefaultValue,
   }) = PrivateItemImplementation;
 
   PrivateItemInterface._() : super._();
@@ -69,6 +83,9 @@ abstract class PrivateItemInterface extends ItemDeclaration {
   bool get isPrimary => throw StateError('Private constructor used');
   @override
   SomeConstantObject get object => throw StateError('Private constructor used');
+  @override
+  String? get nullableWithDefaultValue =>
+      throw StateError('Private constructor used');
 }
 
 class PrivateItemImplementation extends PrivateItemInterface {
@@ -77,6 +94,7 @@ class PrivateItemImplementation extends PrivateItemInterface {
     required this.title,
     this.isPrimary = ItemDeclaration.kIsPrimaryDefault,
     this.object = ItemDeclaration.kConstantObjectDefault,
+    this.nullableWithDefaultValue = 'Hello world',
   }) : super._();
 
   @override
@@ -87,4 +105,6 @@ class PrivateItemImplementation extends PrivateItemInterface {
   final bool isPrimary;
   @override
   final SomeConstantObject object;
+  @override
+  final String? nullableWithDefaultValue;
 }

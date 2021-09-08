@@ -2,6 +2,8 @@ targets:
   $default:
     builders:
       factory:
+        options:
+          throw_on_missing_default_value: true
         enabled: true
         generate_for:
           exclude:
