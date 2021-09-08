@@ -15,6 +15,7 @@ targets:
 builders:
   factory:
     import: "package:factory/factory_builder.dart"
+    required_inputs: [".freezed.dart", ".g.dart"]
     builder_factories: ["factory"]
     build_extensions: { ".dart": [".factory.dart"] }
     auto_apply: dependents
