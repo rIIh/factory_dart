@@ -71,6 +71,12 @@ Only drawback of this that you need provide explicit implementation for `get{Par
 
 Run `build_runner clean ; build runner build --delete-conflicting-outputs` to regenerate until factory code is valid;
 
-## Fix (8 September 2021):
+## Fix
+
+### 8 September 2021:
 
 This behaviour fixed in `analyzer: 2.0.0` but for now flutter not support it.
+
+### 14 March 2022:
+
+Fixed in `factory: ^2.0.0`

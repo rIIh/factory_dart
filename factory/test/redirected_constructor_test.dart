@@ -35,6 +35,5 @@ void main() {
       expect(object.object, equals(ItemDeclaration.kConstantObjectDefault));
       expect(object.isPrimary, equals(ItemDeclaration.kIsPrimaryDefault));
     },
-    skip: 'test is flaky while `analyzer` is below 2.0.0 version.',
   );
 }
