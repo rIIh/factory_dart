@@ -1,0 +1,1 @@
+test: (cd factory ; dart test)

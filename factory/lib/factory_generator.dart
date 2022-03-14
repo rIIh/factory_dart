@@ -349,7 +349,6 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
       final readonlyBulder = Class((it) {
         final typeName = targetElement.thisType.plainName;
         final genericTypes = targetElement.thisType.typeArguments;
-        print('Generating readonly builder - $typeName');
 
         it.name = '${typeName}ReadonlyBuilder';
         it.types.addAll(genericTypes.map((type) => Reference('$type')));
@@ -396,8 +395,6 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         it.name = '_${typeName}Builder';
         it.types.addAll(genericTypes.map((type) => Reference('$type')));
         it.extend = Reference('ObjectBuilder<${targetElement.thisType}>');
-
-        print(it.name);
 
         it.fields.addAll(
           targetParameters.map(
