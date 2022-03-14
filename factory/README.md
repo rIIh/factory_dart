@@ -4,7 +4,7 @@ Factory is created to help define easy to use model factories with predefined fi
 
 ## Usage
 
-See [README.md](../README.md) how to work with package.
+See [README.md](https://github.com/rIIh/factory_dart/blob/master/README.md) how to work with package.
 
 # Known Issues
 
