@@ -6,9 +6,8 @@ targets:
           throw_on_missing_default_value: true
         enabled: true
         generate_for:
-          exclude:
-            - example
           include:
+            - example/main.dart
             - test/integration/*
             - test/integration/**/*
 

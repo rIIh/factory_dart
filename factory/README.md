@@ -2,6 +2,10 @@
 
 Factory is created to help define easy to use model factories with predefined field assignment behaviour.
 
+## Usage
+
+See [../README.md] how to work with package.
+
 # Known Issues
 
 From time to time `analyzer` can't get default value code for formal field parameters.
