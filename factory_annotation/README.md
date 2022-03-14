@@ -7,4 +7,4 @@ Use `factory` package to generate boilerplate code for defined factories.
 
 ## Usage
 
-See [../README.md] how to work with package.
+See [README.md](../README.md) how to work with package.
