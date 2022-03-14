@@ -8,6 +8,7 @@ import 'package:factory_annotation/factory_annotation.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'utils.dart';
+import 'extensions.dart';
 
 void logWarning(String message) => print(getDelimetedSection(
       message,
@@ -30,8 +31,10 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
       return parameter.defaultValueCode;
     }
     if (constructor.redirectedConstructor != null) {
-      final redirectedParameter = constructor.redirectedConstructor!.parameters
-          .firstWhereOrNull((element) => element.name == parameter.name);
+      final redirectedParameter =
+          constructor.redirectedConstructor!.parameters.firstWhereOrNull(
+        (element) => element.name == parameter.name,
+      );
 
       if (redirectedParameter != null) {
         return getDefaultValueCode(redirectedParameter);
@@ -206,6 +209,8 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
 
       final factoryImplementation = Class((it) {
         it.name = '_\$${factoryElement.name}';
+        it.types.addAll(
+            factoryElement.typeParameters.map((type) => Reference('$type')));
         it.extend = Reference('ObjectFactory<${targetElement.thisType}>');
         it.abstract = true;
         it.fields.addAll([
@@ -302,8 +307,13 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
                 '(${e.name} ?? get${e.name.capitalize()})(context, key + \'${e.name}\');',
           );
 
+          final builderTypeParameters = targetElement.thisType.typeArguments;
+          final builderTypeParametersString = builderTypeParameters.isNotEmpty
+              ? '<${builderTypeParameters.join(',')}>'
+              : '';
+
           it.body = Code('''
-            final _\$objectBuilder = _${targetElement.thisType}Builder();
+            final _\$objectBuilder = _${targetElement.thisType.plainName}Builder$builderTypeParametersString();
             this.context.add(_\$objectBuilder.toReadOnly(), this.key);
 
             ${fieldsSetters.join('\n')}
@@ -337,7 +347,12 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
       });
 
       final readonlyBulder = Class((it) {
-        it.name = '${targetElement.thisType}ReadonlyBuilder';
+        final typeName = targetElement.thisType.plainName;
+        final genericTypes = targetElement.thisType.typeArguments;
+        print('Generating readonly builder - $typeName');
+
+        it.name = '${typeName}ReadonlyBuilder';
+        it.types.addAll(genericTypes.map((type) => Reference('$type')));
         it.extend = Reference(
           'ObjectReadonlyBuilder<${targetElement.thisType}>',
         );
@@ -375,8 +390,14 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
       });
 
       final builder = Class((it) {
-        it.name = '_${targetElement.thisType}Builder';
+        final typeName = targetElement.thisType.plainName;
+        final genericTypes = targetElement.thisType.typeArguments;
+
+        it.name = '_${typeName}Builder';
+        it.types.addAll(genericTypes.map((type) => Reference('$type')));
         it.extend = Reference('ObjectBuilder<${targetElement.thisType}>');
+
+        print(it.name);
 
         it.fields.addAll(
           targetParameters.map(
@@ -384,7 +405,6 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
               (it) {
                 final hasDefaultValue =
                     defaultValues[targetParameter.name] != null;
-
                 final shouldBeNullable = !hasDefaultValue &&
                     !targetParameter.type.toString().endsWith('?');
 

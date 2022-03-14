@@ -8,6 +8,12 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 
+String getPlainTypeName(InterfaceType type) {
+  return type
+      .getDisplayString(withNullability: false)
+      .replaceFirst(RegExp(r'<.+>'), '');
+}
+
 Future<String> documentationOfParameter(
   ParameterElement parameter,
   BuildStep buildStep,
