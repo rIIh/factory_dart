@@ -1,8 +1,9 @@
 name: factory
 description: factory generator package. Use it to generate factories implementations.
 version: 1.0.0
-publish_to: none
-homepage: https://github.com/rIIh/factory_dart.git
+homepage: https://github.com/rIIh/factory_dart
+repository: https://github.com/rIIh/factory_dart.git
+issue_tracker: https://github.com/rIIh/factory_dart/issues
 environment:
   sdk: ">=2.12.0 <3.0.0"
 
@@ -13,10 +14,7 @@ dependencies:
   code_builder: ^4.0.0
   collection: ^1.0.0
   dart_style: ^2.0.0
-  factory_annotation:
-    git:
-      url: https://github.com/rIIh/factory_dart.git
-      path: factory_annotation
+  factory_annotation: ^1.0.0
   source_gen: ^1.0.0
 
 dev_dependencies:
