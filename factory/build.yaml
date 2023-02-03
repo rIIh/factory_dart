@@ -8,6 +8,7 @@ targets:
         generate_for:
           include:
             - example/main.dart
+            - example/*
             - test/integration/*
             - test/integration/**/*
 

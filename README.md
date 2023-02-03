@@ -2,6 +2,13 @@
 
 Factory is created to help define easy to use model factories with predefined field assignment behaviour.
 
+
+![Factory title image](https://images2.imgbox.com/f9/33/4DBaGMQJ_o.png)
+
+![Post object creation example](https://images2.imgbox.com/e4/56/ldRTzQbL_o.png)
+
+![Required boilerplate](https://images2.imgbox.com/d6/0e/Zu9QxRV5_o.png)
+
 ## Usage
 
 Mark target class with `Factory` annotation
@@ -58,25 +65,3 @@ void main() {
   }
 }
 ```
-
-# Known Issues
-
-From time to time `analyzer` can't get default value code for formal field parameters.
-Often it happen for models with redirected constructor.
-
-If `factory` not able to get default value code it assumes that parameter is required by default.
-Only drawback of this that you need provide explicit implementation for `get{Param}` method.
-
-## Workaround:
-
-Run `build_runner clean ; build runner build --delete-conflicting-outputs` to regenerate until factory code is valid;
-
-## Fix
-
-### 8 September 2021:
-
-This behaviour fixed in `analyzer: 2.0.0` but for now flutter not support it.
-
-### 14 March 2022:
-
-Fixed in `factory: ^2.0.0`
