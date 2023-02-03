@@ -2,28 +2,66 @@
 
 Factory is created to help define easy to use model factories with predefined field assignment behaviour.
 
+
+![Factory title image](https://images2.imgbox.com/f9/33/4DBaGMQJ_o.png)
+
+![Post object creation example](https://images2.imgbox.com/e4/56/ldRTzQbL_o.png)
+
+![Required boilerplate](https://images2.imgbox.com/d6/0e/Zu9QxRV5_o.png)
+
 ## Usage
 
-See [README.md](https://github.com/rIIh/factory_dart/blob/master/README.md) how to work with package.
+Mark target class with `Factory` annotation
 
-# Known Issues
+```dart
+class Item {
+  final int left;
+  final int right;
 
-From time to time `analyzer` can't get default value code for formal field parameters.
-Often it happen for models with redirected constructor.
+  const Item(this.left, this.right);
+}
 
-If `factory` not able to get default value code it assumes that parameter is required by default.
-Only drawback of this that you need provide explicit implementation for `get{Param}` method.
+@Factory(Item)
+class ItemFactory extends _$ItemFactory with FakerProviderMixin {
+  ItemFactory([FactoryContext? context, ContextKey key = defaultKey])
+      : super(context, key);
+}
 
-## Workaround:
+void main() {
+  Item item;
 
-Run `build_runner clean ; build runner build --delete-conflicting-outputs` to regenerate until factory code is valid;
+  // Create item with random [left] and [right] parameters
+  // provided by [FakerProvider].
+  item = ItemFactory()
+      .create(); // creates Item(left: {random value}, right: {random value})
 
-## Fix
+  // Provide explicit value of [left] parameter to constructor.
+  item = ItemFactory().create(
+    left: fromValue(10),
+  ); // creates Item(left: 10, right: {random value})
 
-### 8 September 2021:
+  // Depend on [left] parameter when building [right] parameter.
+  //
+  // For now order of variables is crucial.
+  // First parameters in constructor initialized earlier
+  // of any further parameters.
+  //
+  // If we try to depend on [right] when instantiating [left] it will be null.
+  item = ItemFactory().create(
+    left: fromValue(10),
+    right: (context, key) =>
+        context.read<ItemReadonlyBuilder, Item>(key.up()).getLeft()! + 10,
+  ); // creates Item(left: 10, right: 10 + 10)
 
-This behaviour fixed in `analyzer: 2.0.0` but for now flutter not support it.
-
-### 14 March 2022:
-
-Fixed in `factory: ^2.0.0`
+  try {
+    item = ItemFactory().create(
+      left: (context, key) =>
+          context.read<ItemReadonlyBuilder, Item>(key.up()).getRight()!,
+      right: fromValue(10),
+    ); // not creates item because left trying
+    // to initialize before right initialized.
+  } on Object {
+    print('failed to create item');
+  }
+}
+```
