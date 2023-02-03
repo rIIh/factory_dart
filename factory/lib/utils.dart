@@ -39,7 +39,7 @@ Future<AstNode> tryGetAstNodeForElement(
 
   while (true) {
     try {
-      final result = library.session.getParsedLibraryByElement2(library)
+      final result = library.session.getParsedLibraryByElement(library)
           as ParsedLibraryResult?;
 
       return result!.getElementDeclaration(element)!.node;
@@ -53,10 +53,9 @@ Future<AstNode> tryGetAstNodeForElement(
 
 bool isEnum(DartType type) {
   final element = type.element;
-  if (element is ClassElement) {
-    return element.isEnum;
-  }
-  return false;
+
+  return element is EnumElement ||
+      (element is ClassElement && element.isDartCoreEnum);
 }
 
 String getDelimeter(int length, {String title = ''}) {

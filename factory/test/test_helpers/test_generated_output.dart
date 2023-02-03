@@ -15,7 +15,7 @@ void testOutput(String target) {
           (element) => element.source.toString().contains('$target')),
     );
 
-    final errorResult = await main.session.getErrors2(
+    final errorResult = await main.session.getErrors(
       '/factory/test/integration/$target.freezed.dart',
     ) as ErrorsResult;
 

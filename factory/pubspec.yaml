@@ -1,14 +1,14 @@
 name: factory
 description: factory generator package. Use it to generate factories implementations.
-version: 2.0.1
+version: 2.1.0
 homepage: https://github.com/rIIh/factory_dart
 repository: https://github.com/rIIh/factory_dart.git
 issue_tracker: https://github.com/rIIh/factory_dart/issues
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: ">=2.17.0 <3.0.0"
 
 dependencies:
-  analyzer: ^2.0.0
+  analyzer: ^5.0.0
   build: ^2.0.0
   build_config: ^1.0.0
   code_builder: ^4.0.0
@@ -21,7 +21,7 @@ dev_dependencies:
   build_runner: ^2.0.0
   build_test: ^2.0.0
   faker: ^2.0.0
-  lints: ^1.0.0
+  lints: ^2.0.0
   matcher: ^0.12.0
   source_gen_test: ^1.0.0
   test: ^1.0.0

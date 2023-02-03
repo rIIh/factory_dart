@@ -5,7 +5,7 @@ import 'package:source_gen/source_gen.dart';
 
 const objectFactoryTypeChecker = TypeChecker.fromRuntime(ObjectFactory);
 
-MethodElement? getMethod(ClassElement classElement, String name) {
+MethodElement? getMethod(InterfaceElement classElement, String name) {
   return classElement.methods
       .firstWhereOrNull((element) => element.name == name);
 }

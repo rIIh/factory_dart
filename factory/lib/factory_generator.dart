@@ -105,7 +105,8 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
     }
     if (isEnum(type)) {
       method =
-          'getEnumValue(${type.getDisplayString(withNullability: false)}.values, $contextGetter, $keyGetter)';
+          'getEnumValue(${type.getDisplayString(withNullability: false)}.values'
+          ', $contextGetter, $keyGetter)';
     }
     if (method != null) {
       return '''
@@ -118,7 +119,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
     }
   }
 
-  bool checkValueProviderAssigned(ClassElement factoryElement) {
+  bool checkValueProviderAssigned(InterfaceElement factoryElement) {
     final fieldElement = factoryElement.fields.firstWhereOrNull(
       (element) => element.name == 'valueProvider',
     );
@@ -126,7 +127,8 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
       if (fieldElement.hasInitializer) {
         return true;
       }
-      if (fieldElement.getter != null && !factoryElement.isAbstract) {
+      if (fieldElement.getter != null &&
+          (factoryElement is ClassElement && !factoryElement.isAbstract)) {
         logWarning(
           'You define `valueProvider` field as a getter in '
           '${factoryElement.thisType.getDisplayString(withNullability: false)}. '

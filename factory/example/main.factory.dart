@@ -10,8 +10,10 @@ part of 'main.dart';
 // **************************************************************************
 
 abstract class _$ItemFactory extends ObjectFactory<Item> {
-  _$ItemFactory([FactoryContext? context, this.key = defaultKey])
-      : isRoot = context == null,
+  _$ItemFactory([
+    FactoryContext? context,
+    this.key = defaultKey,
+  ])  : isRoot = context == null,
         context = context ?? FactoryContext();
 
   final bool isRoot;
@@ -20,7 +22,10 @@ abstract class _$ItemFactory extends ObjectFactory<Item> {
 
   final ContextKey key;
 
-  int getLeft(FactoryContext context, ContextKey key) {
+  int getLeft(
+    FactoryContext context,
+    ContextKey key,
+  ) {
     try {
       return valueProvider!.getInt(context, key);
     } catch (exception) {
@@ -28,7 +33,10 @@ abstract class _$ItemFactory extends ObjectFactory<Item> {
     }
   }
 
-  int getRight(FactoryContext context, ContextKey key) {
+  int getRight(
+    FactoryContext context,
+    ContextKey key,
+  ) {
     try {
       return valueProvider!.getInt(context, key);
     } catch (exception) {
@@ -36,7 +44,10 @@ abstract class _$ItemFactory extends ObjectFactory<Item> {
     }
   }
 
-  Item create({ValueBuilder<int>? left, ValueBuilder<int>? right}) {
+  Item create({
+    ValueBuilder<int>? left,
+    ValueBuilder<int>? right,
+  }) {
     final _$objectBuilder = _ItemBuilder();
     this.context.add(_$objectBuilder.toReadOnly(), this.key);
 
@@ -50,8 +61,11 @@ abstract class _$ItemFactory extends ObjectFactory<Item> {
     }
   }
 
-  List<Item> batch(int length,
-      {ValueBuilder<int>? left, ValueBuilder<int>? right}) {
+  List<Item> batch(
+    int length, {
+    ValueBuilder<int>? left,
+    ValueBuilder<int>? right,
+  }) {
     return List.generate(
       length,
       (index) => create(left: left, right: right),
@@ -60,7 +74,10 @@ abstract class _$ItemFactory extends ObjectFactory<Item> {
 }
 
 class ItemReadonlyBuilder extends ObjectReadonlyBuilder<Item> {
-  const ItemReadonlyBuilder(this.getLeft, this.getRight);
+  const ItemReadonlyBuilder(
+    this.getLeft,
+    this.getRight,
+  );
 
   final ValueGetter<int?> getLeft;
 
