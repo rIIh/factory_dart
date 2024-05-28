@@ -1,0 +1,19 @@
+name: factory_workspace
+
+packages:
+  - apps/**
+  - packages/**
+
+
+scripts:
+  generate:
+    run: melos exec -c 1 --order-dependents --depends-on="build_runner" -- "fvm dart run build_runner build -d"
+  
+  generate:sandbox:
+    run: melos exec -c 1 --scope="sandbox" --depends-on="build_runner" -- "fvm dart run build_runner build -d"
+
+  test:
+    run: melos exec --dir-exists=test -- "fvm dart test"
+
+  test:coverage:
+    run: melos exec --dir-exists=test -- "fvm dart test --coverage && genhtml ./coverage/lcov.info --output-directory ./coverage/out"

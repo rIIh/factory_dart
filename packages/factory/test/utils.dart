@@ -14,6 +14,7 @@ String? getDocumentation(Element element) {
   if (element.documentationComment?.isNotEmpty == true) {
     return element.documentationComment!.replaceAll(RegExp(r'///\s?'), '');
   }
+
   if (element.hasOverride) {
     final classElement = element.enclosingElement as ClassElement?;
     if (classElement != null && element.name != null) {
@@ -26,4 +27,6 @@ String? getDocumentation(Element element) {
       }
     }
   }
+
+  return null;
 }

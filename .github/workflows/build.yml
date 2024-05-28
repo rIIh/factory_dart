@@ -5,7 +5,7 @@ on:
   pull_request:
   schedule:
     # runs the CI everyday at 10AM
-    - cron: "0 10 * * *"
+    - cron: "0 10 * * MON"
 
 jobs:
   freezed:
@@ -14,8 +14,9 @@ jobs:
     strategy:
       matrix:
         package:
-          - factory
-          - factory_annotation
+          - packages/factory
+          - packages/factory_annotation
+          - apps/sandbox
         channel:
           - stable
 
@@ -23,7 +24,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: dart-lang/setup-dart@v1
 
-      # It is executed separatly
+      # It is executed separately
       - name: Removing example folder
         run: rm -rf example
         working-directory: ${{ matrix.package }}
@@ -51,12 +52,5 @@ jobs:
         working-directory: ${{ matrix.package }}
 
       - name: Run tests
-        run: |
-          if grep -q "name: factory_annotation" "pubspec.yaml"; then
-           echo "skip"
-          elif grep -q "name: factory" "pubspec.yaml"; then
-            dart pub get && dart test
-          else
-            dart test
-          fi
+        run: dart test
         working-directory: ${{ matrix.package }}

@@ -2,12 +2,12 @@ class FactoryConstructor {
   const FactoryConstructor();
 }
 
-const factoryConstuctor = FactoryConstructor();
+const factoryConstructor = FactoryConstructor();
 
-class DefaultValueBulder {
+class DefaultValueBuilder {
   final dynamic Function() builder;
 
-  const DefaultValueBulder(this.builder);
+  const DefaultValueBuilder(this.builder);
 }
 
 class Factory {

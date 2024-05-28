@@ -9,7 +9,7 @@ class Item {
   final bool flag;
   final SubItem? subItem;
 
-  @factoryConstuctor
+  @factoryConstructor
   const Item(
     this.name, {
     required this.quantity,

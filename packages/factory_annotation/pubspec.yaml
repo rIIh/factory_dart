@@ -1,17 +1,17 @@
 name: factory_annotation
 description: Implementation details of factory package. Use it to declare factories for your project.
-version: 2.1.0
+version: 2.2.0
 homepage: https://github.com/rIIh/factory_dart
 repository: https://github.com/rIIh/factory_dart.git
 issue_tracker: https://github.com/rIIh/factory_dart/issues
-environment:
-  sdk: ">=2.17.0 <3.0.0"
 
-dev_dependencies:
-  test: ^1.0.0
-  build_runner: ^2.0.0
-  lints: ^2.0.0
+environment:
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   meta: ^1.0.0
   faker: ^2.0.0
+
+dev_dependencies:
+  test: ^1.0.0
+  lints: ^2.0.0

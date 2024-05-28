@@ -58,26 +58,26 @@ bool isEnum(DartType type) {
       (element is ClassElement && element.isDartCoreEnum);
 }
 
-String getDelimeter(int length, {String title = ''}) {
+String getDelimiter(int length, {String title = ''}) {
   title = title.trim().isNotEmpty ? ' ${title.trim()} ' : title;
   length = max(length, title.length);
   length = title.length.isEven ? length : length + 1;
-  final delimeter = '=' * length;
+  final delimiter = '=' * length;
   final start = (length - title.length) ~/ 2;
   final end = (length + title.length) ~/ 2;
-  return delimeter.replaceRange(start, end, title);
+  return delimiter.replaceRange(start, end, title);
 }
 
-String getDelimetedSection(
+String getDelimitedSection(
   String message,
-  int delimeterLength, {
+  int delimiterLength, {
   String title = '',
 }) {
   final maxPart = message.split('\n').map((e) => e.length).fold(0, max);
-  delimeterLength = max(delimeterLength, maxPart);
+  delimiterLength = max(delimiterLength, maxPart);
 
-  final top = getDelimeter(delimeterLength, title: title);
-  final bottom = getDelimeter(top.length);
+  final top = getDelimiter(delimiterLength, title: title);
+  final bottom = getDelimiter(top.length);
 
   return [
     top,

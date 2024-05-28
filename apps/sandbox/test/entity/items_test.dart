@@ -1,21 +1,7 @@
-// ignore_for_file: unused_local_variable
+import 'package:sandbox/entity/item.dart';
+import 'package:test/test.dart';
 
-import 'package:factory_annotation/factory_annotation.dart';
-
-part 'main.factory.dart';
-
-class Item {
-  final int left;
-  final int right;
-
-  const Item(this.left, this.right);
-}
-
-@Factory(Item)
-class ItemFactory extends _$ItemFactory with FakerProviderMixin {
-  ItemFactory([FactoryContext? context, ContextKey key = defaultKey])
-      : super(context, key);
-}
+import '../factories/item_factory.dart';
 
 void main() {
   Item item;
@@ -53,4 +39,7 @@ void main() {
   } on Object {
     print('failed to create item');
   }
+
+  // useless check, just to justify analyzer
+  expect(item, isNotNull);
 }

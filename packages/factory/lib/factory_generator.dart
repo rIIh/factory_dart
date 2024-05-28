@@ -1,6 +1,6 @@
 import 'package:analyzer/dart/element/type.dart';
-import 'package:build/src/builder/build_step.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:build/build.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:collection/collection.dart';
 import 'package:dart_style/dart_style.dart';
@@ -10,7 +10,7 @@ import 'package:source_gen/source_gen.dart';
 import 'utils.dart';
 import 'extensions.dart';
 
-void logWarning(String message) => print(getDelimetedSection(
+void logWarning(String message) => print(getDelimitedSection(
       message,
       32,
       title: 'Factory Generator',
@@ -30,6 +30,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
     if (parameter.hasDefaultValue) {
       return parameter.defaultValueCode;
     }
+
     if (constructor.redirectedConstructor != null) {
       final redirectedParameter =
           constructor.redirectedConstructor!.parameters.firstWhereOrNull(
@@ -40,6 +41,8 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         return getDefaultValueCode(redirectedParameter);
       }
     }
+
+    return null;
   }
 
   Future<String?> getDocumentation(
@@ -67,6 +70,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         return field!.documentationComment;
       }
     }
+    return null;
   }
 
   bool checkOptionalRecursive(ParameterElement parameter) {
@@ -78,8 +82,9 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
       );
       return checkOptionalRecursive(redirectedParameter);
     }
+
     // TODO: remove when `analyzer: 2.0.0` dependency used.
-    // Because of occasionaly missing defaultValueCode for parameter
+    // Because of occasionally missing defaultValueCode for parameter
     // we can't use `parameter.isOptional` to determine optionality.
     // Analyzer marks parameter optional regardless of missing defaultValueCode.
     // Therefore parameter can't be optional if we not have default value for it
@@ -117,6 +122,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
       }
       ''';
     }
+    return null;
   }
 
   bool checkValueProviderAssigned(InterfaceElement factoryElement) {
@@ -135,7 +141,8 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
           'That type of operation is not supported.\n'
           '\n'
           'Prefer to use "late ValueProvider? valueProvider = {value}" syntax.\n'
-          'Or use mixin with "late ValueProvider? valueProvider = {value}" implementation.\n'
+          'Or use mixin with "late ValueProvider? valueProvider = {value}" '
+          'implementation.\n'
           '\n'
           'Example - `class Factory extends _\$Factory with FakerProviderMixin`',
         );
@@ -191,7 +198,8 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         final element = targetParameter.type.element;
         if (element?.isAccessibleIn(factoryElement.library) != true) {
           logWarning(
-            '${targetParameter.type.getDisplayString(withNullability: false)} needed by ${targetConstructor.displayName}\n'
+            '${targetParameter.type.getDisplayString(withNullability: false)} '
+            'needed by ${targetConstructor.displayName}\n'
             'but not accessible in ${factoryElement.library.displayName} file.',
           );
         }
@@ -306,7 +314,8 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
 
           final fieldsSetters = targetParameters.map(
             (e) => '_\$objectBuilder.${e.name} = '
-                '(${e.name} ?? get${e.name.capitalize()})(context, key + \'${e.name}\');',
+                '(${e.name} ?? get${e.name.capitalize()})(context, key + '
+                '\'${e.name}\');',
           );
 
           final builderTypeParameters = targetElement.thisType.typeArguments;
@@ -348,7 +357,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         }));
       });
 
-      final readonlyBulder = Class((it) {
+      final readonlyBuilder = Class((it) {
         final typeName = targetElement.thisType.plainName;
         final genericTypes = targetElement.thisType.typeArguments;
 
@@ -430,10 +439,10 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
             (it) {
               it
                 ..name = 'toReadOnly'
-                ..returns = Reference(readonlyBulder.name);
+                ..returns = Reference(readonlyBuilder.name);
 
               it.body = Code('''
-              return ${readonlyBulder.name}(
+              return ${readonlyBuilder.name}(
                 ${targetParameters.map((e) => '() => ${e.name}').join(',\n')}
               );
               ''');
@@ -448,12 +457,12 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
                 if (e.isNamed) {
                   return '${e.name}: ${e.name}';
                 }
-                return '${e.name}';
+                return e.name;
               });
               final constructorHasName =
                   targetConstructor.name.isNotEmpty == true;
-              final constructor =
-                  '${targetElement.thisType}${constructorHasName ? '.' + targetConstructor.name : ''}';
+              final constructor = '${targetElement.thisType}'
+                  '${constructorHasName ? '.${targetConstructor.name}' : ''}';
               it
                 ..name = 'build'
                 ..returns = Reference('${targetElement.thisType}')
@@ -480,7 +489,7 @@ class FactoryGenerator extends GeneratorForAnnotation<Factory> {
         (b) => b.body.addAll(
           [
             factoryImplementation,
-            readonlyBulder,
+            readonlyBuilder,
             builder,
           ],
         ),

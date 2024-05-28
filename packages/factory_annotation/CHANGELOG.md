@@ -1,3 +1,8 @@
+## 2.2.0 (05/28/24)
+
+- Restructure repository
+- Fix typos in class members
+
 ## 2.1.0
 
 - Bump SDK constraints: 
